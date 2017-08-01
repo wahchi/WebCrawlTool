@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+    function download() {
+        var file = '{{ file_name|safe }}';
+        var type = '{{ type|safe }}';
+        if(type == 'pictures') {
+            window.location.href = "download/" + file;
+        } else {
+            window.location.href = 'download/' + file + '.csv';
+
+        }
+
+//            alert(file1);
+
+    }
+
+    </script>
+</head>
+<body>
+    <table id="conditions" border="1" style="width:100%;table-layout:fixed;">
+        {% if type == 'text' %}
+            {% for line in lines %}
+            <tr>
+            {% for data in line %}
+                <td>
+                {{ data }}
+                </td>
+            {% endfor %}
+            </tr>
+            {% endfor %}
+        {% endif %}
+        {% if type == 'webs' %}
+
+            {% for line in lines %}
+                <tr>
+                {% for data in line %}
+                <td>
+                {{ data }}
+                </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+
+        {% endif %}
+        {% if type == 'pictures' %}
+
+            {% for line in lines %}
+                <tr>
+
+                    <td>
+                    {{ line[0] }}
+                    </td>
+                    <td><img src="{{ line[1] }}"></td>
+                </tr>
+            {% endfor %}
+
+        {% endif %}
+    </table>
+
+    <input type="button" value="下载" onclick="download();">
+
+</body>
+</html>

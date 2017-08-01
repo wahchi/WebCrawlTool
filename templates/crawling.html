@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .nanobar {
+          width: 100%;
+          height: 10px;
+          z-index: 9999;
+          top:0
+        }
+        .bar {
+          width: 0;
+          height: 100%;
+          transition: height .3s;
+          background:#912;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="../static/nanobar.min.js"></script>
+    <script src="../static/create_form.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            var the_task_id = '{{ task_id }}';
+            var nanobar = new Nanobar({id: 'bar', target: document.getElementById('nanobar')});
+            update_progress(the_task_id, nanobar);
+
+
+
+        });
+        //更新进度条的函数
+        function update_progress(the_task_id,nanobar){
+            $.get("/status/"+the_task_id,function(data){
+                percent = parseInt(data['progress']);
+                // alert(percent);
+                nanobar.go(percent);
+                $('#notice').html("已经下载了"+percent.toString()+"%~~");
+                // if (data['state'] != 'PENDING' && data['state'] != 'PROGRESS'){//state == 'success'
+                if (data['state'] == 'success'){
+
+                    var params = {};
+                    params['lines'] = JSON.stringify(data['lines']);
+                    params['type'] = data['type'];
+                    params['file_name'] = data['file_name'];
+                    createForm(params, '/crawl_more_result');
+                }
+                else{
+
+                    setTimeout(function(){
+                        update_progress(the_task_id,nanobar);
+                    },2000);
+                }
+            });
+        };
+        //end
+
+
+
+
+
+
+    </script>
+</head>
+<body>
+    <div class="nanobar" id="nanobar"></div>
+    <div>
+        <label id="notice">
+
+        </label>
+
+    </div>
+</body>
+</html>

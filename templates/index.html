@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crawl Page</title>
+    <script>
+        //输入框非空
+        function check() {
+            if(!document.getElementById('url').value) {
+                alert('请输入网址');
+                return false;
+            }
+        }
+    </script>
+</head>
+<body>
+    <form action="/get_url" method="post" onsubmit="return check();">
+        <legend>Please input url:</legend>
+        <p><input id='url' name="url" placeholder="URL"></p>
+        <p><input name="result" type="radio" value="text" checked="true">爬文字
+            <input name="result" type="radio" value="webs">爬网址
+            <input name="result" type="radio" value="pictures">爬图片</p>
+        <p><button type="submit">INPUT</button></p>
+    </form>
+</body>
+</html>

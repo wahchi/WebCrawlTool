@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crawl Page</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="../static/create_form.js"></script>
+
+    <script type="text/javascript">
+        var count = 0;
+
+        /**
+         * frame调用此方法添加爬取项
+         *
+         */
+        function add_con(conditions) {
+            //获取爬取类型
+            var crawl_result = {{crawl_result|safe }};
+
+
+            var newDiv = document.createElement('tr');
+//            newDiv.setAttribute('_xlid_', conditions['xlid']);
+            newDiv.setAttribute('id', '_tr'+count);
+
+            var commonDiv = '<div style="width:100%;height:100px;overflow-x:hidden;overflow-y:scroll;word-wrap:break-word;word-break:break-all;">'
+            var delButton = '<button width="100%" onclick="del('+count+')">删除</button>'
+            var inner = '<td>'+commonDiv+delButton+'</div></td>';
+            //<td xlid="text_id"><div xxx>text</div></td>
+            if(crawl_result == 'text') {
+                if (typeof conditions['text'] !== typeof undefined && conditions['text'] !== false) {
+                    inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + conditions['text'] + '</div></td>';
+                } else {
+                    inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + '</div></td>';
+                }
+                newDiv.innerHTML = inner;
+                document.getElementById('conditions').appendChild(newDiv);
+                count ++;
+            }
+            //<td xlid="text_id"><div xxx>text</div></td><td xlid='url_id'><div>url</div></td>
+            else if(crawl_result == 'webs') {
+                if (typeof conditions['text'] !== typeof undefined && conditions['text'] !== false) {
+                    inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + conditions['text'] + '</div></td>';
+                } else {
+                    inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + '</div></td>';
+                }
+                if(typeof conditions['link'] !== typeof undefined && conditions['link'] !== false) {
+
+                        var whole_url = conditions['link'];
+                        inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + whole_url + '</div></td>';
+
+
+                } else {
+                    inner += '<td xlid='+ conditions['xlid'] +'>'+commonDiv+'</div></td>';
+                }
+                newDiv.innerHTML = inner;
+                document.getElementById('conditions').appendChild(newDiv);
+                count ++;
+
+
+            }
+            else if(crawl_result == 'pictures') {
+                if(conditions['text'] && !document.getElementById('_tr'+count)) {
+                    if (typeof conditions['text'] !== typeof undefined && conditions['text'] !== false) {
+                        inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + conditions['text'] + '</div></td>';
+                    } else {
+                        inner += '<td xlid='+ conditions['xlid'] +'>' + commonDiv + '</div></td>';
+                    }
+                    newDiv.innerHTML = inner;
+                    document.getElementById('conditions').appendChild(newDiv);
+                }else {
+                    var pic_inner = '';
+                    if(typeof conditions['link'] !== typeof undefined && conditions['link'] !== false) {
+
+                        pic_inner += '<td xlid='+ conditions['xlid'] +'>'+commonDiv+'<img src="' + conditions['link'] + '"/></div></td>';
+
+                    } else {
+                        pic_inner += '<td xlid='+ conditions['xlid'] +'>'+commonDiv+'</div></td>';
+                    }
+
+
+                    document.getElementById('_tr'+count).innerHTML += pic_inner;
+                    count ++;
+                }
+            }
+        }
+        /**
+         * 删除
+         * @param num
+         */
+        function del(num) {
+            document.getElementById('conditions').removeChild(document.getElementById("_tr"+num));
+        }
+        /**
+         * 爬取
+         */
+        function crawl() {
+            var nodes = document.getElementById('conditions').getElementsByTagName('tr');
+            var contents = new Array();
+            // 多页爬取
+            if($('input[name="is_multi"]:checked').val()=='1'){
+                for(var n=1; n<nodes.length; n++) {
+                    if({{ crawl_result|safe }} == 'text')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].getAttribute('xlid')];
+                    }
+                    if({{ crawl_result|safe }} == 'webs')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].getAttribute('xlid')];
+                    }
+                    if({{ crawl_result|safe }} == 'pictures')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].getAttribute('xlid'),nodes[n].getElementsByTagName('td')[2].getAttribute('xlid')];
+                    }
+                }
+            }
+            // 单页爬取
+            if($('input[name="is_multi"]:checked').val()=='0'){
+                for(var n=1; n<nodes.length; n++) {
+                    if({{ crawl_result|safe }} == 'text')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].querySelector('div').textContent.trim()];
+                    }
+                    if({{ crawl_result|safe }} == 'webs')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].querySelector('div').textContent.trim(),nodes[n].getElementsByTagName('td')[2].querySelector('div').textContent.trim()];
+                    }
+                    if({{ crawl_result|safe }} == 'pictures')
+                    {
+                        contents[contents.length] = [nodes[n].getElementsByTagName('td')[1].querySelector('div').textContent.trim(),nodes[n].getElementsByTagName('td')[2].querySelector('div').querySelector('img').getAttribute('src')];
+                    }
+                }
+            }
+            var params = {};
+            params['contents'] = JSON.stringify(contents);
+            if($('input[name="is_multi"]:checked').val()=='1') {
+                params['links'] = document.getElementById('links').value.trim()+";"+"{{ url }}";
+                alert(params['links']);
+
+            }
+            params['result'] = {{ crawl_result|safe }};
+            if($('input[name="is_multi"]:checked').val()=='1') {
+                createForm(params, '/crawl_more');
+            } else if($('input[name="is_multi"]:checked').val()=='0') {
+                createForm(params, '/crawl_one');
+            }
+        }
+        $(document).ready(function() {
+            $('input[type=radio][name=is_multi]').change(function() {
+                if (this.value == '0') {
+                    $('#links').prop('disabled', true);
+                }
+                else if (this.value == '1') {
+                    $('#links').prop('disabled', false);
+                }
+            });
+        });
+
+    </script>
+</head>
+<body>
+<!--{{ source }}-->
+
+    <div id="main" width="100%">
+        <div width="100%">
+            <iframe id='browse' style="zoom:60%" height="7304" width="70%" srcdoc="{{ source }}" style="float:right"></iframe>
+            <div style="float:right;width:29%;">
+                <p><input type="radio" id='one' name="is_multi" value="0" checked="true">单页爬取
+                <p><input type="radio" id='multi' name="is_multi" value="1">多页爬取，请输入网址（用分号;隔开）：
+                <p><input type="text" id="links" disabled="disabled">
+                <p><button onclick="crawl()" type="submit">开始爬取</button>
+                <table id="conditions" border="1" style="width:100%;table-layout:fixed;">
+                    <tr>
+                        <th width="20%">选择</th>
+                        <th width="40%">列-1</th>
+                        {% if crawl_result|safe != '"text"' %}
+                            <th width="40%">列-2</th>
+                        {% endif %}
+                    </tr>
+                </table>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+</body>
+</html>
