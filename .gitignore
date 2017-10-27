@@ -102,3 +102,5 @@ __pycache__/*
 __pycache__/
 .idea/*
 .idea/
+blog_env/*
+blog_env/
